@@ -1,28 +1,42 @@
-# Virtual Environment
+# Virtual environments
 venv/
+.venv/
 
 # Python
 __pycache__/
 *.py[cod]
 *.pyo
+*.pkl
 
-# Environment Variables
+# Environment variables
 .env
+.env.*
+!.env.example
 
 # macOS
 .DS_Store
 
-# Streamlit
-.streamlit/
+# IDE
+.vscode/
+.idea/
 
-# Generated Files
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# Generated files
 uploads/*
 charts/*
 reports/*
 models/*
+exports/*
 
 # Keep folders in Git
 !uploads/.gitkeep
 !charts/.gitkeep
 !reports/.gitkeep
 !models/.gitkeep
+!exports/.gitkeep
+
+# Logs and temporary files
+*.log
+*.tmp
