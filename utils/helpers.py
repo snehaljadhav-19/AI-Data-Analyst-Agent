@@ -1,32 +1,45 @@
-
 import pandas as pd
 
 
 def load_dataset(uploaded_file):
-    """Load an uploaded CSV file with automatic encoding detection."""
-    encodings = ("utf-8", "utf-8-sig", "cp1252", "latin1")
+    """Load a CSV, Excel, or JSON dataset."""
+    try:
+        file_name = getattr(uploaded_file, "name", "").lower()
+        extension = file_name.rsplit(".", 1)[-1] if "." in file_name else ""
 
-    for encoding in encodings:
-        try:
+        if hasattr(uploaded_file, "seek"):
             uploaded_file.seek(0)
-            df = pd.read_csv(uploaded_file, encoding=encoding)
-            if df.empty or len(df.columns) == 0:
-                return None, "The uploaded CSV file is empty or contains no valid columns."
-            return df, None
-        except UnicodeDecodeError:
-            continue
-        except pd.errors.EmptyDataError:
-            return None, "The uploaded CSV file is empty."
-        except pd.errors.ParserError as e:
-            return None, f"Unable to parse the CSV file: {e}"
-        except Exception as e:
-            return None, str(e)
 
-    return None, "Unable to decode the CSV file. Please check its encoding."
+        if extension == "csv":
+            try:
+                df = pd.read_csv(uploaded_file, encoding="utf-8-sig")
+            except UnicodeDecodeError:
+                uploaded_file.seek(0)
+                df = pd.read_csv(uploaded_file, encoding="latin1")
+        elif extension in {"xlsx", "xls"}:
+            df = pd.read_excel(uploaded_file)
+        elif extension == "json":
+            df = pd.read_json(uploaded_file)
+        else:
+            return None, f"Unsupported file format: {extension or 'unknown'}"
+
+        if df.empty:
+            return None, "The uploaded file contains no data."
+
+        if df.columns.duplicated().any():
+            return None, "The dataset contains duplicate column names."
+
+        return df, None
+
+    except Exception as e:
+        return None, str(e)
 
 
 def dataset_summary(df):
     """Return basic dataset information."""
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Expected a pandas DataFrame.")
+
     return {
         "Rows": df.shape[0],
         "Columns": df.shape[1],
