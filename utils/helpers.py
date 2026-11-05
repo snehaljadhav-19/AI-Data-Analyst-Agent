@@ -1,3 +1,4 @@
+
 import pandas as pd
 
 
@@ -12,10 +13,10 @@ def load_dataset(uploaded_file):
 
         if extension == "csv":
             try:
-                df = pd.read_csv(uploaded_file, encoding="utf-8-sig")
+                df = pd.read_csv(uploaded_file, encoding="utf-8-sig", low_memory=False)
             except UnicodeDecodeError:
                 uploaded_file.seek(0)
-                df = pd.read_csv(uploaded_file, encoding="latin1")
+                df = pd.read_csv(uploaded_file, encoding="latin1", low_memory=False)
         elif extension in {"xlsx", "xls"}:
             df = pd.read_excel(uploaded_file)
         elif extension == "json":
@@ -40,10 +41,12 @@ def dataset_summary(df):
     if not isinstance(df, pd.DataFrame):
         raise TypeError("Expected a pandas DataFrame.")
 
+    memory_kb = df.memory_usage(index=True, deep=True).sum() / 1024
+
     return {
-        "Rows": df.shape[0],
-        "Columns": df.shape[1],
-        "Missing Values": int(df.isnull().sum().sum()),
+        "Rows": len(df),
+        "Columns": len(df.columns),
+        "Missing Values": int(df.isna().to_numpy().sum()),
         "Duplicate Rows": int(df.duplicated().sum()),
-        "Memory Usage (KB)": round(df.memory_usage(deep=True).sum() / 1024, 2)
+        "Memory Usage (KB)": round(memory_kb, 2)
     }
